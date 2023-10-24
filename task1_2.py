@@ -2,6 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as sio
 
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score
+import time
+
+import seaborn as sns
+
 # TASK A
 # Load the .mat file
 data_mat = sio.loadmat('face.mat')
@@ -9,7 +15,6 @@ X = data_mat['X']
 
 num_faces = 10  # number of images per identity
 num_identities = X.shape[1] // num_faces
-print(f'Number of identities: {num_identities}')
 
 # Partition the data into training and testing sets using mat73-loaded data
 train_data = np.hstack([X[:, i*num_faces:i*num_faces+8] for i in range(num_identities)])
@@ -63,8 +68,8 @@ def reconstruct_image(image, eigenvectors, mean_face, num_bases):
 
 # Sample usage
 num_bases_list = [5, 100, 200, 300, 414, 1000]  # Number of bases to use for reconstruction
-# sample_images = [train_images[0], test_data[:, 0].reshape(46, 56).T, train_images[-1]]  # Sample images from training and testing datasets
-sample_images = [test_data[:, 0].reshape(46, 56).T, test_data[:, 2].reshape(46, 56).T, test_data[:, 4].reshape(46, 56).T]
+sample_images = [train_images[0], test_data[:, 0].reshape(46, 56).T, train_images[-1]]  # Sample images from training and testing datasets
+# sample_images = [test_data[:, 0].reshape(46, 56).T, test_data[:, 2].reshape(46, 56).T, test_data[:, 4].reshape(46, 56).T]
 
 # Loop through each sample image and reconstruct it using different numbers of bases
 for i, image in enumerate(sample_images):
@@ -83,3 +88,43 @@ for i, image in enumerate(sample_images):
     
     plt.tight_layout()
     plt.show()
+
+
+# TASK B
+# TRAINING with NN
+num_bases = 414  # Number of bases to use for reconstruction
+# Project training and test data onto the PCA bases
+train_features = (train_data - mean_face_pca.flatten()[:, np.newaxis]).T @ eigenvectors[:, :num_bases]
+test_features = (test_data - mean_face_pca.flatten()[:, np.newaxis]).T @ eigenvectors[:, :num_bases]
+
+# Labels for training and test data
+train_labels = np.array([[i] * 8 for i in range(num_identities)]).flatten()
+test_labels = np.array([[i] * 2 for i in range(num_identities)]).flatten()
+
+# Step 2: Classification
+# Initialize and train k-NN classifier
+start_time = time.time()
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(train_features, train_labels)
+
+# Predict labels for test data
+predicted_labels = knn.predict(test_features)
+end_time = time.time()
+
+# Step 3: Evaluation
+# Calculate recognition accuracy
+accuracy = accuracy_score(test_labels, predicted_labels)
+
+# Generate confusion matrix
+conf_matrix = confusion_matrix(test_labels, predicted_labels)
+
+# Time taken
+time_taken = end_time - start_time
+
+print(f'Accuracy: {accuracy:.2f}')
+print(f'Time taken: {time_taken:.2f} seconds')
+
+sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues")
+plt.ylabel('True label')
+plt.xlabel('Predicted label')
+plt.show()
