@@ -68,8 +68,8 @@ plt.title('Eigenvalues in Descending Order')
 plt.grid(True)
 plt.show()
 
-# We can pick rank_S - 1 eigenfaces to represent the data. After that, the eigenvalues are ~ 0. So, we can pick 414 eigenfaces to represent the data.
-# We have rank(S) - 1 eigenvectors with nonzero eigenvalues.
+# We can pick rank_S eigenfaces to represent the data. After that, the eigenvalues are ~ 0. So, we can pick 416 eigenfaces to represent the data.
+# We have rank(S) eigenvectors with nonzero eigenvalues.
 
 
 # TASK B

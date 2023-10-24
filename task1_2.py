@@ -92,7 +92,7 @@ for i, image in enumerate(sample_images):
 
 # TASK B
 # TRAINING with NN
-num_bases = 414  # Number of bases to use for reconstruction
+num_bases = 416  # Number of bases to use for reconstruction
 # Project training and test data onto the PCA bases
 train_features = (train_data - mean_face_pca.flatten()[:, np.newaxis]).T @ eigenvectors[:, :num_bases]
 test_features = (test_data - mean_face_pca.flatten()[:, np.newaxis]).T @ eigenvectors[:, :num_bases]
