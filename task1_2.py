@@ -62,8 +62,9 @@ def reconstruct_image(image, eigenvectors, mean_face, num_bases):
     return reconstructed_image, error
 
 # Sample usage
-num_bases_list = [5, 100, 200, 300, 414]  # Number of bases to use for reconstruction
-sample_images = [train_images[0], test_data[:, 0].reshape(46, 56).T, train_images[-1]]  # Sample images from training and testing datasets
+num_bases_list = [5, 100, 200, 300, 414, 1000]  # Number of bases to use for reconstruction
+# sample_images = [train_images[0], test_data[:, 0].reshape(46, 56).T, train_images[-1]]  # Sample images from training and testing datasets
+sample_images = [test_data[:, 0].reshape(46, 56).T, test_data[:, 2].reshape(46, 56).T, test_data[:, 4].reshape(46, 56).T]
 
 # Loop through each sample image and reconstruct it using different numbers of bases
 for i, image in enumerate(sample_images):
