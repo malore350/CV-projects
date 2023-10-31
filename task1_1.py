@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as sio
+import time
 
 # TASK A
 # Load the .mat file
@@ -28,6 +29,8 @@ mean_centered_image = np.mean(mean_centered_data, axis=0)
 # Flatten the mean-centered data for PCA
 A = mean_centered_data.reshape(mean_centered_data.shape[0], -1).T
 
+time_start = time.time()
+
 # Compute the covariance matrix
 S = (A @ A.T) / num_identities
 rank_S = np.linalg.matrix_rank(S)
@@ -40,6 +43,10 @@ eigenvalues = eigenvalues[sorted_indices]
 eigenvectors = eigenvectors[:, sorted_indices]
 
 eigenvectors = eigenvectors / np.linalg.norm(eigenvectors, axis=0)
+
+time_end = time.time()
+
+print(f'Time taken for first method: {time_end - time_start} seconds')
 
 # Visualizing the mean face and the first few eigenfaces
 plt.figure(figsize=(5, 5))
@@ -74,6 +81,8 @@ plt.show()
 
 # TASK B
 # Compute the alternate covariance matrix
+time_start = time.time()
+
 S_2 = (A.T @ A) / num_identities
 
 # Calculate eigenvectors and eigenvalues for the alternate covariance matrix
@@ -86,6 +95,9 @@ eigenvectors_2 = eigenvectors_2[:, sorted_indices_2]
 eigenvectors_transformed = A @ eigenvectors_2
 # Normalize the transformed eigenvectors
 eigenvectors_transformed = eigenvectors_transformed / np.linalg.norm(eigenvectors_transformed, axis=0)
+
+time_end = time.time()
+print(f'Time taken for second method: {time_end - time_start} seconds')
 
 # Visualizing the first few eigenfaces for the alternate method
 fig, axes = plt.subplots(1, 5, figsize=(15, 5))
@@ -118,18 +130,33 @@ plt.grid(True)
 plt.show()
 
 
-# Initialize an empty list to hold the cosine similarities
+# Eigenvectors check:
+# Calculate cosine similarity for the first five pairs of eigenvectors
 cosine_similarities = []
 
-# Calculate cosine similarity for the first five pairs of eigenvectors
-for i in range(5):
+for i in range(10):
     cos_sim = np.dot(eigenvectors[:, i], eigenvectors_transformed[:, i])
     cosine_similarities.append(cos_sim)
 
 # Print the cosine similarities
-print("Cosine Similarities for the first five pairs of eigenvectors:", cosine_similarities)
+print("Cosine Similarities for the first ten pairs of eigenvectors:", cosine_similarities)
 
 # Cosine Similarities for the first five pairs of eigenvectors: [-1.0000000000000004, -1.0000000000000009, 0.9999999999999988, 0.9999999999999991, 1.0]
 # The cosine similarities are not exactly 1 because of numerical errors.
 # Negative cosine similarity means they are exactly on the same vector, just pointing in the opposite direction.
 # For this reason we can see that the images are very similar, just the pixels are inverted (where it is dark it becomes light and vice versa)
+
+# Eigenvalues check:
+tolerance = 1e-5  # Set your own tolerance level
+are_eigenvalues_identical = np.allclose(eigenvalues[:rank_S], eigenvalues_2[:rank_S], atol=tolerance)
+print(f"Are eigenvalues identical? {are_eigenvalues_identical}")
+
+# Are eigenvalues identical? True
+
+# Method 1:
+# Pros: Directly operates in the original data space.
+# Cons: Could be computationally expensive if the dimensionality of the data (number of pixels) is very high.
+
+# Method 2:
+# Pros: Much faster computation time.
+# Cons: Requires back transformation to get the eigenvectors in the original space, adding an extra computational step.
