@@ -23,73 +23,82 @@ test_data = np.hstack([X[:, i*num_faces+8:(i+1)*num_faces] for i in range(num_id
 train_labels = np.array([[i] * 8 for i in range(num_identities)]).flatten()
 test_labels = np.array([[i] * 2 for i in range(num_identities)]).flatten()
 
-# Number of principal components to keep
-num_bases = 104
+# Divide training data into 4 equal subsets
+subset_size = train_data.shape[1] // 4
+subsets = [train_data[:, i*subset_size:(i+1)*subset_size] for i in range(4)] # list of 4 subsets of shape (2576, 104)
+subset_labels = [train_labels[i*subset_size:(i+1)*subset_size] for i in range(4)]
 
-# Initialize variables for tracking metrics
-batch_train_times = []
-inc_train_times = []
-batch_accuracies = []
-inc_accuracies = []
-batch_reconstruction_errors = []
-inc_reconstruction_errors = []
+n_components = 104
+# Incremental PCA
+start_time = time.time()
+ipca = IncrementalPCA(n_components=n_components)  # you can change n_components based on your needs
 
-# Function to perform classification and get reconstruction error
-def evaluate_pca(train_features, test_features, train_labels, test_labels):
-    # Initialize and train k-NN classifier
-    knn = KNeighborsClassifier(n_neighbors=1)
-    knn.fit(train_features, train_labels)
-    # Predict labels for test data
-    predicted_labels = knn.predict(test_features)
-    # Calculate recognition accuracy
-    accuracy = accuracy_score(test_labels, predicted_labels)
-    # Compute reconstruction error on a sample test image
-    sample_test_image = test_data[:, 0]
-    reconstruction = np.dot(test_features[0, :], pca.components_) + pca.mean_
-    reconstruction_error = np.sum((sample_test_image - reconstruction)**2)
-    return accuracy, reconstruction_error
+for subset in subsets:
+    ipca.partial_fit(subset.T)
 
-# Loop through subsets of the data
-for end_idx in range(104, 417, 104):
-    subset = train_data[:, :end_idx]
+incremental_time = time.time() - start_time
 
-    # Batch PCA
-    start_time = time.time()
-    pca = PCA(n_components=num_bases)
-    pca.fit(subset.T)
-    batch_train_time = time.time() - start_time
-    batch_train_times.append(batch_train_time)
-    
-    # Project data onto the principal components
-    batch_train_features = pca.transform(subset.T)
-    batch_test_features = pca.transform(test_data.T)
-    
-    # Evaluation for Batch PCA
-    batch_accuracy, batch_reconstruction_error = evaluate_pca(batch_train_features, batch_test_features, train_labels[:end_idx], test_labels)
-    batch_accuracies.append(batch_accuracy)
-    batch_reconstruction_errors.append(batch_reconstruction_error)
+# Batch PCA
+start_time = time.time()
+pca = PCA(n_components=n_components)  # same number of components as before
+pca.fit(train_data.T)
 
-    # Incremental PCA
-    ipca = IncrementalPCA(n_components=num_bases, batch_size=104)
-    start_time = time.time()
-    for i in range(0, end_idx, 104):
-        ipca.partial_fit(subset[:, i:i+104].T)
-    inc_train_time = time.time() - start_time
-    inc_train_times.append(inc_train_time)
-    
-    # Project data onto the principal components
-    inc_train_features = ipca.transform(subset.T)
-    inc_test_features = ipca.transform(test_data.T)
-    
-    # Evaluation for Incremental PCA
-    inc_accuracy, inc_reconstruction_error = evaluate_pca(inc_train_features, inc_test_features, train_labels[:end_idx], test_labels)
-    inc_accuracies.append(inc_accuracy)
-    inc_reconstruction_errors.append(inc_reconstruction_error)
+batch_time = time.time() - start_time
 
-# Results
-print("Batch PCA Training Times:", batch_train_times)
-print("Incremental PCA Training Times:", inc_train_times)
-print("Batch PCA Accuracies:", batch_accuracies)
-print("Incremental PCA Accuracies:", inc_accuracies)
-print("Batch PCA Reconstruction Errors:", batch_reconstruction_errors)
-print("Incremental PCA Reconstruction Errors:", inc_reconstruction_errors)
+# 1st Subset PCA
+start_time = time.time()
+first_subset_pca = PCA(n_components=n_components)
+first_subset_pca.fit(subsets[0].T)
+
+first_subset_time = time.time() - start_time
+
+# Recognition
+# Transform data
+X_ipca = ipca.transform(test_data.T)
+X_pca = pca.transform(test_data.T)
+X_first_subset = first_subset_pca.transform(test_data.T)
+
+# Create a k-NN classifier
+knn = KNeighborsClassifier(n_neighbors=1)
+
+# Incremental PCA
+knn.fit(ipca.transform(train_data.T), train_labels)
+accuracy_ipca = accuracy_score(test_labels, knn.predict(X_ipca))
+
+# Batch PCA
+knn.fit(pca.transform(train_data.T), train_labels)
+accuracy_pca = accuracy_score(test_labels, knn.predict(X_pca))
+
+# First Subset PCA
+knn.fit(first_subset_pca.transform(subsets[0].T), subset_labels[0])
+accuracy_first_subset = accuracy_score(test_labels, knn.predict(X_first_subset))
+
+# Reconstruction
+# Incremental PCA
+X_ipca_reconstructed = ipca.inverse_transform(ipca.transform(test_data.T))
+reconstruction_error_ipca = np.mean((test_data - X_ipca_reconstructed.T)**2)
+
+# Batch PCA
+X_pca_reconstructed = pca.inverse_transform(pca.transform(test_data.T))
+reconstruction_error_pca = np.mean((test_data - X_pca_reconstructed.T)**2)
+
+# First Subset PCA
+X_first_subset_reconstructed = first_subset_pca.inverse_transform(first_subset_pca.transform(test_data.T))
+reconstruction_error_first_subset = np.mean((test_data - X_first_subset_reconstructed.T)**2)
+
+
+# Print results
+print("Training time for Incremental PCA:", incremental_time)
+print("Training time for Batch PCA:", batch_time)
+print("Training time for First Subset PCA:", first_subset_time)
+
+print("Accuracy for Incremental PCA:", accuracy_ipca)
+print("Accuracy for Batch PCA:", accuracy_pca)
+print("Accuracy for First Subset PCA:", accuracy_first_subset)
+
+print("Reconstruction error for Incremental PCA:", reconstruction_error_ipca)
+print("Reconstruction error for Batch PCA:", reconstruction_error_pca)
+print("Reconstruction error for First Subset PCA:", reconstruction_error_first_subset)
+
+# When we divide the training data into 4 equal subsets, the accuracy for Incremental PCA and Batch PCA are identical, which means that main data variances are well captured from the first batch.
+# Dividing into more subsets will result in lower accuracy for Incremental PCA, because the first batch of data does not capture the main data variances well. Having 104 components is enough to capture the main data variances.

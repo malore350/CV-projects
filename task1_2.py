@@ -81,22 +81,22 @@ sample_images = [train_images[0], test_data[:, 0].reshape(46, 56).T, train_image
 # sample_images = [test_data[:, 0].reshape(46, 56).T, test_data[:, 2].reshape(46, 56).T, test_data[:, 4].reshape(46, 56).T]
 
 # Loop through each sample image and reconstruct it using different numbers of bases
-# for i, image in enumerate(sample_images):
-#     plt.figure(figsize=(15, 5))
-#     plt.subplot(1, len(num_bases_list) + 1, 1)
-#     plt.imshow(image, cmap='gray')
-#     plt.title('Original')
-#     plt.axis('off')
+for i, image in enumerate(sample_images):
+    plt.figure(figsize=(15, 5))
+    plt.subplot(1, len(num_bases_list) + 1, 1)
+    plt.imshow(image, cmap='gray')
+    plt.title('Original')
+    plt.axis('off')
     
-#     for j, num_bases in enumerate(num_bases_list):
-#         reconstructed_image, error = reconstruct_image(image, eigenvectors, mean_face_pca, num_bases)
-#         plt.subplot(1, len(num_bases_list) + 1, j + 2)
-#         plt.imshow(reconstructed_image, cmap='gray')
-#         plt.title(f'Reconstructed\n{num_bases} bases\nError: {error:.2f}')
-#         plt.axis('off')
+    for j, num_bases in enumerate(num_bases_list):
+        reconstructed_image, error = reconstruct_image(image, eigenvectors, mean_face_pca, num_bases)
+        plt.subplot(1, len(num_bases_list) + 1, j + 2)
+        plt.imshow(reconstructed_image, cmap='gray')
+        plt.title(f'Reconstructed\n{num_bases} bases\nError: {error:.2f}')
+        plt.axis('off')
     
-#     plt.tight_layout()
-#     plt.show()
+    plt.tight_layout()
+    plt.show()
 
 
 # TASK B
@@ -155,17 +155,15 @@ specific_test_labels = test_labels[specific_indices]
 # Make predictions using k-NN for these specific faces
 specific_predictions = knn.predict(specific_test_features)
 
-# Output the results
-for i, (true_label, predicted_label) in enumerate(zip(specific_test_labels, specific_predictions)):
-    match = "Yes" if true_label == predicted_label else "No"
-    print(f"Test face {i+1}: True label = {true_label}, Predicted label = {predicted_label}, Match = {match}")
-
 # If you want to show these specific test faces
 for i, index in enumerate(specific_indices):
     specific_face_image = test_data[:, index].reshape(46, 56).T
     plt.subplot(1, len(specific_indices), i+1)
     plt.imshow(specific_face_image, cmap='gray')
-    plt.title(f"Label: {specific_test_labels[i]}\nPrediction: {specific_predictions[i]}")
+    if specific_test_labels[i] == specific_predictions[i]:
+        plt.title(f"Label: {specific_test_labels[i]}\nPrediction: {specific_predictions[i]}\nSuccessfull Classification")
+    else:
+        plt.title(f"Label: {specific_test_labels[i]}\nPrediction: {specific_predictions[i]}\nFailed Classification")
     plt.axis('off')
 
 plt.tight_layout()
