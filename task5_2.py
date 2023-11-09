@@ -122,6 +122,5 @@ plt.tight_layout()
 plt.show()
 
 # Plot the classification report
-y_pred = results['conf_matrix'].argmax(axis=1)
-y_test = results['conf_matrix'].argmax(axis=0)
-print(classification_report(y_test, y_pred))
+y_pred = results['test_predictions']
+print(classification_report(test_labels, y_pred))
