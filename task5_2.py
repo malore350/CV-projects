@@ -97,29 +97,69 @@ plt.ylabel('Actual Label')
 plt.xlabel('Predicted Label')
 plt.show()
 
-# Plot examples of correct and incorrect predictions (3 each)
-plt.figure(figsize=(10, 5))
+# Plot examples of 3 correct predictions of different classes in one plot
 
 # Ensure the correct and incorrect indices are lists and limit to 3 each
 correct_indices = results['correct_idx'][:3] if results['correct_idx'] else []
-incorrect_indices = results['incorrect_idx'][:3] if results['incorrect_idx'] else []
+incorrect_indices = results['incorrect_idx'] if results['incorrect_idx'] else []
+incorrect_indices_18 = [idx for idx in incorrect_indices if test_labels[idx] == 18][:1]
+incorrect_indices_29 = [idx for idx in incorrect_indices if test_labels[idx] == 29][:1]
 
-# Visualizing correct predictions
-for i, idx in enumerate(correct_indices):
-    plt.subplot(2, 3, i+1)
-    plt.imshow(test_data[:, idx].reshape(46, 56).T, cmap='gray')
-    plt.title(f"True: {test_labels[idx]}, Pred: {results['test_predictions'][idx]}")
-    plt.axis('off')
+# # # Visualizing correct predictions of 3 different classes (1, 2, 3), make this a separate plot
+# plt.figure(figsize=(15, 5))
+# class_indices = [np.where(test_labels == i)[0][0] for i in range(1, 4)]
+# for i, idx in enumerate(class_indices):
+#     plt.subplot(1, 3, i+1)
+#     plt.imshow(test_data[:, idx].reshape(46, 56).T, cmap='gray')
+#     plt.title(f"Correct: True: {test_labels[idx]}, Pred: {results['test_predictions'][idx]}")
+#     plt.axis('off')
+# plt.tight_layout()
+# plt.show()
 
-# Visualizing incorrect predictions
-for i, idx in enumerate(incorrect_indices):
-    plt.subplot(2, 3, i+4)
+# # Visualizing incorrect predictions of 3 different classes and class 24 train example image next to it
+# plt.figure(figsize=(15, 5))
+
+# # Include class 24 along with incorrect predictions for 18 and 29
+# class_indices = [np.where(test_labels == i)[0][0] for i in [18, 29, 24]]  # 24 added
+
+# for i, idx in enumerate(class_indices):
+#     plt.subplot(1, 3, i + 1)  # Adjust subplot for three images
+#     plt.imshow(test_data[:, idx].reshape(46, 56).T, cmap='gray')
+#     if i < 2:  # For classes 18 and 29, show incorrect predictions
+#         plt.title(f"Incorrect: True: {test_labels[idx]}, Pred: {results['test_predictions'][idx]}")
+#     else:  # For class 24, just show the class label
+#         plt.title(f"Class: {test_labels[idx]}")
+#     plt.axis('off')
+
+# plt.tight_layout()
+# plt.show()
+
+plt.figure(figsize=(15, 5))
+class_indices = [np.where(test_labels == i)[0][0] for i in range(1, 4)]
+labels = ['(a)', '(b)', '(c)']  # New labels
+
+for i, idx in enumerate(class_indices):
+    plt.subplot(1, 3, i+1)
     plt.imshow(test_data[:, idx].reshape(46, 56).T, cmap='gray')
-    plt.title(f"True: {test_labels[idx]}, Pred: {results['test_predictions'][idx]}")
+    #plt.title(labels[i])  # Use the new label
     plt.axis('off')
 
 plt.tight_layout()
 plt.show()
+
+plt.figure(figsize=(15, 5))
+class_indices = [np.where(test_labels == i)[0][0] for i in [18, 29, 24]]  # 24 added
+labels = ['(a)', '(b)', '(c)']  # New labels
+
+for i, idx in enumerate(class_indices):
+    plt.subplot(1, 3, i + 1)  # Adjust subplot for three images
+    plt.imshow(test_data[:, idx].reshape(46, 56).T, cmap='gray')
+    #plt.title(labels[i])  # Use the new label
+    plt.axis('off')
+
+plt.tight_layout()
+plt.show()
+
 
 # Plot the classification report
 y_pred = results['test_predictions']
