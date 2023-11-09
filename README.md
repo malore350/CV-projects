@@ -1,5 +1,6 @@
 ---
-abstract: |
+# **CS485 Machine Learning for Computer Vision: Coursework 1**
+## Abstract:
   This report presents a comprehensive analysis of established machine
   learning techniques applied to computer vision tasks as outlined in
   the coursework. We systematically address the implementation and
@@ -11,9 +12,8 @@ abstract: |
   error rates, and computational efficiency. The findings contribute to
   a deeper understanding of the practical applications of these
   algorithms in the field of computer vision.
-author:
-- Kamran Gasimov$^{1}$ and Alexandra Suchshenko$^{2}$ [^1] [^2]
-title: " **CS485 Machine Learning for Computer Vision: Coursework 1** "
+## Authors:
+- Kamran Gasimov and Alexandra Suchshenko [^1] [^2]
 ---
 
 # NAIVE EIGENFACE APPROACH
